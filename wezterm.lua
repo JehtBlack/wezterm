@@ -1,3 +1,14 @@
+local function os_name()
+	local binary_format = package.cpath:match("%p[\\|/]?%p(%a+)")
+	if binary_format == "dll" then
+		return "Windows"
+	elseif binary_format == "so" then
+		return "Linux"
+	elseif binary_format == "dylib" then
+		return "MacOS"
+	end
+end
+
 local function get_home_dir()
 	local home = os.getenv("MIKE_ROOT")
 	if not home then
@@ -7,12 +18,19 @@ local function get_home_dir()
 end
 
 local function get_shell()
-	local cmder = os.getenv("CMDER_ROOT")
-	if cmder then
-		return { "cmd.exe", "/k", "%CMDER_ROOT%\\vendor\\init.bat" }
-	end
+	local os_name = os_name()
+	if os_name == "Windows" then
+		local cmder = os.getenv("CMDER_ROOT")
+		if cmder then
+			return { "cmd.exe", "/k", "%CMDER_ROOT%\\vendor\\init.bat" }
+		end
 
-	return { "cmd.exe" }
+		return { "cmd.exe" }
+	elseif os_name == "Linux" then
+		return { "/bin/bash" }
+	elseif os_name == "MacOS" then
+		return { "/bin/zsh" }
+	end
 end
 
 local wezterm = require("wezterm")
